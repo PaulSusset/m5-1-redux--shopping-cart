@@ -69,11 +69,11 @@ We need both to use Redux
 ## Creating a Redux store
 
 ```js
-import { createStore } from 'redux';
+import { createStore } from "redux";
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'SOMETHING':
+    case "SOMETHING":
       return 5;
     default:
       return state;
@@ -91,18 +91,18 @@ const store = createStore(reducer, initialState);
 
 ```js
 // In src/index.js
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
 
-import App from './components/App';
+import App from "./components/App";
 
 const store = ReactDOM.render(
   // All the create-store stuff
   <Provider store={store}>
     <App />
   </Provider>,
-  document.querySelector('#root')
+  document.querySelector("#root")
 );
 ```
 
@@ -112,7 +112,7 @@ const store = ReactDOM.render(
 
 ```js
 // components/AppleFarm.js
-import { useSelector } from 'react-redux';
+import { useSelector } from "react-redux";
 
 const AppleFarm = () => {
   const numberOfApples = useSelector((state) => {
@@ -153,16 +153,14 @@ Our state shape:
 */
 
 const FridgeContents = () => {
-  const fridgeItems = /* TODO */
+  const fridgeItems = useSelector((state) => state.fridge);
 
   return (
     <div>
       <h1>Your fridge contains:</h1>
 
-      {fridgeItems.map(item => (
-        <div key={item}>
-          {item}
-        </div>
+      {fridgeItems.map((item) => (
+        <div key={item}>{item}</div>
       ))}
     </div>
   );
@@ -197,13 +195,11 @@ const App = () => {
   // We're going to watch OUR favourite movie,
   // in our BOYFRIEND's favourite genre.
   // (Terror at Jarry Park)
-  const movie = /* TODO */
+  const movie = useSelector((state) => {
+    return state.myfavouriteMovies[state.boyfriendFavouriteMovies];
+  });
 
-  return (
-    <div>
-      Tonight, we'll watch: {movie}
-    </div>
-  );
+  return <div>Tonight, we'll watch: {movie}</div>;
 };
 ```
 
@@ -226,13 +222,13 @@ Our state shape:
 const UserProfile = () => {
   // `streetAddress` should be formatted as:
   // "129 W. 81st St, Apartment 5A"
-  const streetAddress = /* TODO */
+  const streetAddress = useSelector((state) => {
+    if (state.address.line2)
+      return `${state.address.line1}, ${state.address.line2}`;
+    return state.address.line1;
+  });
 
-  return (
-    <div>
-      You live at {address}.
-    </div>
-  );
+  return <div>You live at {streetAddress}.</div>;
 };
 ```
 
@@ -266,14 +262,12 @@ Our state shape:
 */
 
 const OnlineUsers = () => {
-  const myStatus = /* TODO */
-  const onlineUsers = /* TODO */
+  const myStatus = useSelector((state) => state.myStatus);
+  const onlineUsers = useSelector((state) => {
+    return state.users.filter((user) => user.online);
+  });
 
-  return onlineUsers.map(user => (
-    <div key={user.name}>
-      {user.name}
-    </div>
-  ));
+  return onlineUsers.map((user) => <div key={user.name}>{user.name}</div>);
 };
 ```
 
@@ -293,21 +287,21 @@ By convention, action creators in redux all live together in the same file(s):
 // actions.js
 export const addTodo = (todoItem) => {
   return {
-    type: 'ADD_TODO',
+    type: "ADD_TODO",
     todoItem,
   };
 };
 
 export const markTodoAsCompleted = (todoId) => {
   return {
-    type: 'MARK_TODO_AS_COMPLETED',
+    type: "MARK_TODO_AS_COMPLETED",
     todoId,
   };
 };
 
 export const deleteTodo = (todoId) => {
   return {
-    type: 'DELETE_TODO',
+    type: "DELETE_TODO",
     todoId,
   };
 };
@@ -362,12 +356,12 @@ Wire in the action and dispatch it.
 ---
 
 ```js
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 
-import { pokeUser } from '../actions';
+import { pokeUser } from "../actions";
 
 const OnlineUsers = () => {
-  // TODO: Something missing here...
+  const dispatch = useDispatch;
 
   const onlineUsers = useSelector((state) => {
     return state.users.filter((user) => user.online);
@@ -375,32 +369,40 @@ const OnlineUsers = () => {
 
   return onlineUsers.map((user) => (
     <div key={user.name}>
-      <button onClick={/* TODO */}>Message {user.name}</button>
+      <button onClick={() => dispatch(pokeUser(user))}>
+        Message {user.name}
+      </button>
     </div>
   ));
 };
+
+// actions.js
+const pokeUser = (user) => ({
+  type: "POKE_USER",
+  user,
+});
 ```
 
 ---
 
 ```js
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 
-import { addItemToFridge } from '../actions';
+import { addItemToFridge } from "../actions";
 
 const FridgeForm = () => {
-  const [value, setValue] = React.useState('');
+  const [value, setValue] = React.useState("");
   const dispatch = useDispatch();
 
   return (
     <form
       onSubmit={() => {
-        /* TODO */
+        dispatch(addItemToFridge(value));
       }}
     >
-      <input type='text' onChange={(ev) => setValue(ev.target.value)} />
+      <input type="text" onChange={(ev) => setValue(ev.target.value)} />
 
-      <button type='submit'>Submit</button>
+      <button type="submit">Submit</button>
     </form>
   );
 };
@@ -409,9 +411,9 @@ const FridgeForm = () => {
 ---
 
 ```js
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 
-import { dismissModal } from '../actions';
+import { dismissModal } from "../actions";
 
 const Modal = () => {
   const dispatch = useDispatch();
@@ -420,12 +422,13 @@ const Modal = () => {
     const handleKeydown = (ev) => {
       // TODO: Close modal when 'Escape' is pressed
       // (Hint: use ev.key)
+      if (ev.key === "Escape") dispatch(dismissModall());
     };
 
-    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener("keydown", handleKeydown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener("keydown", handleKeydown);
     };
   }, []);
 
