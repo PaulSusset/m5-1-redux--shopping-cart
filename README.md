@@ -178,7 +178,7 @@ We can imagine the following transformations:
 ```
 Our initial state: {}
 
-We dispatch an action that looks like this:
+We dipatchs an action that looks like this:
 { type: 'ADD_ITEM', item: { id: 'a', price: 100 } }
 
 Our state now looks like:
@@ -266,7 +266,7 @@ export default function cartReducer(state = initialState, action) {
 We can then import that selector into our `Cart` component, and use it to get an array of store items:
 
 ```js
-import { getStoreItemArray } from '../../reducers';
+import { getStoreItemArray } from "../../reducers";
 
 const Cart = () => {
   const storeItems = useSelector(getStoreItemArray);
